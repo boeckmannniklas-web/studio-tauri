@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-edge-suchen"
+description = "Enables the edge_suchen command without any pre-configured scope."
+commands.allow = ["edge_suchen"]
+
+[[permission]]
+identifier = "deny-edge-suchen"
+description = "Denies the edge_suchen command without any pre-configured scope."
+commands.deny = ["edge_suchen"]

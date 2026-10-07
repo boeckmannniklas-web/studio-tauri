@@ -1,0 +1,66 @@
+# Release der Kassenplatz-App: Tag v<version> (muss zu package.json, Cargo.toml und
+# tauri.conf.json passen) → Windows-Installer (NSIS), signiertes Update und latest.json am
+# GitHub-Release. Die installierten Plätze holen sich das Update von dort (Endpunkt in
+# tauri.conf.json). Ohne Tag-Auslösung: per „Run workflow“ mit dem Tag starten.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag, z. B. v0.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Version prüfen
+        shell: bash
+        run: |
+          v="${TAG#v}"
+          grep -q "\"version\": \"$v\"" package.json || { echo "package.json passt nicht zu $TAG"; exit 1; }
+          grep -q "^version = \"$v\"" src-tauri/Cargo.toml || { echo "Cargo.toml passt nicht zu $TAG"; exit 1; }
+          grep -q "\"version\": \"$v\"" src-tauri/tauri.conf.json || { echo "tauri.conf.json passt nicht zu $TAG"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - run: npm ci
+
+      - name: Tests
+        working-directory: src-tauri
+        run: cargo test --lib
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ env.TAG }}
+          releaseName: "Studio Kassenplatz ${{ env.TAG }}"
+          releaseBody: "Änderungen: siehe CHANGELOG.md. Installieren: StudioKassenplatz_…_x64-setup.exe herunterladen und am Platz ausführen."
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true

@@ -1,0 +1,57 @@
+[package]
+name = "studio-kassenplatz"
+version = "0.1.0"
+description = "Studio-Kassenplatz – Theke, Self-Service-Kiosk und Anzeige für den Studio-Server"
+authors = ["Studio"]
+edition = "2021"
+rust-version = "1.80"
+
+[lib]
+name = "studio_kassenplatz_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.5", features = [] }
+
+[dependencies]
+# Ab 2.11.1 prüft Tauri auch eigene Befehle gegen die Capabilities, wenn eine Seite von außen
+# kommt. Die Oberfläche des Studio-Servers darf keinen Befehl dieser App aufrufen.
+tauri = { version = "2.11.1", features = [] }
+tauri-plugin-updater = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-log = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["time", "sync", "rt", "macros"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+url = "2"
+log = "0.4"
+anyhow = "1"
+base64 = "0.22"
+aes-gcm = "0.10"
+rand = "0.8"
+png = "0.17"
+keyring = { version = "3", features = ["windows-native", "sync-secret-service"] }
+mdns-sd = "0.13"
+if-addrs = "0.13"
+futures = "0.3"
+nusb = "0.1"
+machine-uid = "0.5"
+libloading = "0.8"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+sha2 = "0.10"
+hex = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+hostname = "0.4"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_System_LibraryLoader", "Win32_System_Threading", "Win32_System_Registry"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

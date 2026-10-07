@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-koppeln"
+description = "Enables the koppeln command without any pre-configured scope."
+commands.allow = ["koppeln"]
+
+[[permission]]
+identifier = "deny-koppeln"
+description = "Denies the koppeln command without any pre-configured scope."
+commands.deny = ["koppeln"]

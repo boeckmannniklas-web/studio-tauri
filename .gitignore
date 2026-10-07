@@ -1,0 +1,9 @@
+node_modules/
+src-tauri/target/
+src-tauri/gen/
+*.log
+# Herstellerbibliotheken (SecuGen) gehören nie ins öffentliche Repo – sie kommen als Gerätepaket vom Studio-Server
+*.dll
+*.sys
+*.inf
+*.cat

@@ -1,0 +1,22 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "lokal",
+  "description": "Nur die eigenen Seiten der App (Einrichtung, Wartung, keine Verbindung). Die Oberfläche des Studio-Servers bekommt keine Befehle.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "allow-einrichtung-stand",
+    "allow-edge-suchen",
+    "allow-koppeln",
+    "allow-starten",
+    "allow-geraete-einrichten",
+    "allow-wartung-pin",
+    "allow-wartung-info",
+    "allow-edge-aendern",
+    "allow-update-suchen",
+    "allow-update-installieren",
+    "allow-entkoppeln",
+    "allow-zurueck",
+    "allow-beenden"
+  ]
+}

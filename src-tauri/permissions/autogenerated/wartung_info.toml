@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-wartung-info"
+description = "Enables the wartung_info command without any pre-configured scope."
+commands.allow = ["wartung_info"]
+
+[[permission]]
+identifier = "deny-wartung-info"
+description = "Denies the wartung_info command without any pre-configured scope."
+commands.deny = ["wartung_info"]

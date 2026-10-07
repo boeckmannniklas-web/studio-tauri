@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Wartung</title>
+  <link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<main>
+  <div class="karte">
+    <div class="kopf">
+      <h1>Wartung</h1>
+      <p id="platz"></p>
+    </div>
+    <div class="inhalt">
+      <div id="hinweis" class="hinweis versteckt"></div>
+
+      <div id="sperre">
+        <div class="leise" id="pin_text">Wartungs-PIN eingeben (festgelegt in der Kassenverwaltung → Kassenplätze).</div>
+        <div class="punkte" id="punkte"></div>
+        <div class="pin" id="pad"></div>
+        <button id="abbrechen" type="button" style="width: 100%; margin-top: 12px">Zurück</button>
+      </div>
+
+      <div id="menue" class="versteckt">
+        <dl>
+          <dt>Studio-Server</dt><dd id="i_edge"></dd>
+          <dt>Platz</dt><dd id="i_platz"></dd>
+          <dt>App</dt><dd id="i_version"></dd>
+        </dl>
+        <div class="schritt">
+          <h2>Geräte an diesem PC</h2>
+          <div id="usb" class="liste"></div>
+        </div>
+        <div class="liste">
+          <button id="zurueck" class="blau" type="button">Zurück zur Oberfläche</button>
+          <button id="treiber" type="button">Geräte einrichten (Treiber installieren)</button>
+          <button id="update" type="button">Nach Updates suchen</button>
+          <div class="reihe">
+            <input id="neue_edge" placeholder="Neue Adresse des Studio-Servers" autocomplete="off" style="flex: 3">
+            <button id="edge_aendern" type="button">Übernehmen</button>
+          </div>
+          <div class="reihe">
+            <button id="entkoppeln" class="rot" type="button">Entkoppeln</button>
+            <button id="beenden" class="navy" type="button">App beenden</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="gemeinsam.js"></script>
+<script src="wartung.js"></script>
+</body>
+</html>

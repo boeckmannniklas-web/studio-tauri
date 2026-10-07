@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-starten"
+description = "Enables the starten command without any pre-configured scope."
+commands.allow = ["starten"]
+
+[[permission]]
+identifier = "deny-starten"
+description = "Denies the starten command without any pre-configured scope."
+commands.deny = ["starten"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-zurueck"
+description = "Enables the zurueck command without any pre-configured scope."
+commands.allow = ["zurueck"]
+
+[[permission]]
+identifier = "deny-zurueck"
+description = "Denies the zurueck command without any pre-configured scope."
+commands.deny = ["zurueck"]

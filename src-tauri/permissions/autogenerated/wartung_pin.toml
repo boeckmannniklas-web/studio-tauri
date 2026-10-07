@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-wartung-pin"
+description = "Enables the wartung_pin command without any pre-configured scope."
+commands.allow = ["wartung_pin"]
+
+[[permission]]
+identifier = "deny-wartung-pin"
+description = "Denies the wartung_pin command without any pre-configured scope."
+commands.deny = ["wartung_pin"]

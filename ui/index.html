@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Studio Kassenplatz einrichten</title>
+  <link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<main>
+  <div class="karte">
+    <div class="kopf">
+      <h1>Studio Kassenplatz einrichten</h1>
+      <p>Diesen PC mit dem Studio-Server koppeln – den Code zeigt die Kassenverwaltung unter „Kassenplätze“.</p>
+    </div>
+    <div class="inhalt">
+      <div id="hinweis" class="hinweis versteckt"></div>
+
+      <div id="koppeln">
+        <div class="schritt">
+          <h2>1 · Studio-Server</h2>
+          <div class="reihe">
+            <input id="edge" placeholder="studio.local oder IP-Adresse" autocomplete="off" style="flex: 3">
+            <button id="suchen" type="button">Suchen</button>
+          </div>
+          <div id="funde" class="liste"></div>
+        </div>
+        <div class="schritt">
+          <h2>2 · Koppelcode</h2>
+          <input id="code" class="code" placeholder="ABC DEF" maxlength="120" autocomplete="off">
+          <div class="leise" style="margin-top: 6px">Code abtippen oder den QR-Code aus dem Koppeldialog scannen.</div>
+        </div>
+        <button id="los" class="blau" type="button" style="width: 100%">Koppeln</button>
+      </div>
+
+      <div id="fertig" class="versteckt">
+        <div class="hinweis gut" id="gekoppelt"></div>
+        <div class="schritt">
+          <h2>Geräte an diesem PC</h2>
+          <div id="usb" class="liste"></div>
+          <button id="treiber" type="button" class="versteckt" style="width: 100%; margin-top: 10px">Geräte einrichten (Treiber installieren)</button>
+          <div class="leise" style="margin-top: 6px">Die Treiberinstallation fragt nach Administratorrechten.</div>
+        </div>
+        <button id="starten" class="blau" type="button" style="width: 100%">Starten</button>
+      </div>
+    </div>
+    <div class="fuss">
+      <span id="version"></span>
+      <button id="beenden" type="button">Beenden</button>
+    </div>
+  </div>
+</main>
+<script src="gemeinsam.js"></script>
+<script src="einrichtung.js"></script>
+</body>
+</html>

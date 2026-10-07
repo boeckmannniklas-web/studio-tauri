@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-geraete-einrichten"
+description = "Enables the geraete_einrichten command without any pre-configured scope."
+commands.allow = ["geraete_einrichten"]
+
+[[permission]]
+identifier = "deny-geraete-einrichten"
+description = "Denies the geraete_einrichten command without any pre-configured scope."
+commands.deny = ["geraete_einrichten"]
