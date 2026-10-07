@@ -7,10 +7,14 @@
 //!
 //! Kiosk und Anzeige: Vollbild, immer im Vordergrund, Schließen gesperrt. Theke: Vollbild,
 //! ebenfalls nur über das Wartungsmenü (Strg+Alt+S) zu beenden.
+//!
+//! Die Größe der Oberfläche stellt der Platz am Server ein (Zoom in Prozent); Strg +/− am Platz
+//! bleibt aus, sonst verstellt sie jeder Kunde.
 
 use std::sync::atomic::Ordering;
 
 use anyhow::{Context, Result};
+use tauri::webview::PageLoadEvent;
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 
 use crate::Zustand;
@@ -58,6 +62,12 @@ pub fn erstellen(app: &AppHandle) -> Result<WebviewWindow> {
         .resizable(false)
         .zoom_hotkeys_enabled(false)
         .initialization_script(SCHUTZ)
+        // Zoom je Seite: die Oberfläche des Servers in der Größe des Platzes, eigene Seiten wie gebaut
+        .on_page_load(|w, p| {
+            if p.event() == PageLoadEvent::Finished {
+                let _ = w.set_zoom(if ist_lokal(p.url()) { 1.0 } else { platz_zoom(w.app_handle()) });
+            }
+        })
         .on_navigation(move |url| {
             if ist_lokal(url) {
                 return true;
@@ -97,6 +107,21 @@ pub fn erstellen(app: &AppHandle) -> Result<WebviewWindow> {
         }
     });
     Ok(fenster)
+}
+
+/// Zoomfaktor der Oberfläche laut Platz (100 % = 1.0)
+fn platz_zoom(app: &AppHandle) -> f64 {
+    let z = app.state::<Zustand>().konfig.lock().unwrap().as_ref().map(|k| k.zoom).unwrap_or(100);
+    f64::from(z.clamp(50, 200)) / 100.0
+}
+
+/// Geänderten Zoom sofort übernehmen, ohne die Seite neu zu laden.
+pub fn zoom_anwenden(app: &AppHandle) {
+    if let Some(f) = fenster(app) {
+        if f.url().map(|u| !ist_lokal(&u)).unwrap_or(false) {
+            let _ = f.set_zoom(platz_zoom(app));
+        }
+    }
 }
 
 pub fn fenster(app: &AppHandle) -> Option<WebviewWindow> {

@@ -1,6 +1,6 @@
 [package]
 name = "studio-kassenplatz"
-version = "0.1.0"
+version = "0.2.0"
 description = "Studio-Kassenplatz – Theke, Self-Service-Kiosk und Anzeige für den Studio-Server"
 authors = ["Studio"]
 edition = "2021"
@@ -45,6 +45,8 @@ sha2 = "0.10"
 hex = "0.4"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 hostname = "0.4"
+# Magnetkartenleser am USB-Seriell-Wandler (COM-Anschluss)
+serialport = "4"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"

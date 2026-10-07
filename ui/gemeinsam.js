@@ -9,7 +9,7 @@ function melden(id, text, art = 'fehler') {
   zeigen(id, !!text);
 }
 const ARTEN = { kiosk: 'Self-Service-Kiosk', anzeige: 'Verfügbarkeitsanzeige', bedient: 'Theke' };
-const TYPEN = { finger: 'Fingerabdruckscanner', qr: 'QR-Scanner', drucker: 'Bondrucker' };
+const TYPEN = { finger: 'Fingerabdruckscanner', magnetkarte: 'Magnetkartenleser', qr: 'QR-Scanner', drucker: 'Bondrucker' };
 const STATUS = { bereit: 'bereit', treiber_fehlt: 'Treiber fehlt', fehler: 'Fehler', erkannt: 'erkannt – folgt' };
 function geraeteListe(el, usb) {
   el.innerHTML = '';

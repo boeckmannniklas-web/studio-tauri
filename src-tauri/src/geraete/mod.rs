@@ -1,9 +1,10 @@
 //! Geräte, die per USB an diesem PC stecken.
 //!
-//! Der Agent meldet sie dem Studio-Server (Herzschlag, „USB-Geräte suchen“). Nutzbar ist in
-//! dieser Version der SecuGen-Fingerabdruckscanner; QR-Scanner und Bondrucker werden erkannt
-//! und gemeldet, ihre Unterstützung folgt.
+//! Der Agent meldet sie dem Studio-Server (Herzschlag, „USB-Geräte suchen“). Nutzbar sind der
+//! SecuGen-Fingerabdruckscanner und Magnetkartenleser an einem USB-Seriell-Wandler; QR-Scanner
+//! und Bondrucker werden erkannt und gemeldet, ihre Unterstützung folgt.
 
+pub mod magnetkarte;
 pub mod pakete;
 pub mod secugen;
 
@@ -11,10 +12,13 @@ use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct UsbGeraet {
-    /// finger | qr | drucker – wie die Gerätefunktion am Server
+    /// finger | magnetkarte | qr | drucker – wie die Gerätefunktion am Server
     pub typ: &'static str,
     /// VID:PID
     pub usb_id: String,
+    /// Wo es steckt – beim Kartenleser der COM-Anschluss
+    #[serde(rename = "usb_anschluss", skip_serializing_if = "Option::is_none")]
+    pub anschluss: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seriennummer: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -57,11 +61,16 @@ pub fn suchen() -> Vec<UsbGeraet> {
         if vid == SECUGEN {
             let (klasse, modell) = secugen_modell(pid);
             let (status, meldung) = secugen::zustand();
-            out.push(UsbGeraet { typ: "finger", usb_id, seriennummer, modell: Some(modell.into()), klasse, status, meldung });
+            out.push(UsbGeraet { typ: "finger", usb_id, anschluss: None, seriennummer, modell: Some(modell.into()), klasse, status, meldung });
+        } else if let Some(chip) = magnetkarte::wandler(vid, pid) {
+            let (status, meldung) = magnetkarte::zustand();
+            let modell = Some(format!("Magnetkartenleser ({})", produkt.unwrap_or_else(|| chip.into())));
+            out.push(UsbGeraet { typ: "magnetkarte", usb_id, anschluss: magnetkarte::stand().anschluss, seriennummer, modell,
+                                 klasse: None, status, meldung });
         } else if QR.contains(&vid) {
-            out.push(UsbGeraet { typ: "qr", usb_id, seriennummer, modell: produkt, klasse: None, status: "erkannt".into(), meldung: None });
+            out.push(UsbGeraet { typ: "qr", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status: "erkannt".into(), meldung: None });
         } else if DRUCKER.contains(&vid) {
-            out.push(UsbGeraet { typ: "drucker", usb_id, seriennummer, modell: produkt, klasse: None, status: "erkannt".into(), meldung: None });
+            out.push(UsbGeraet { typ: "drucker", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status: "erkannt".into(), meldung: None });
         }
     }
     out

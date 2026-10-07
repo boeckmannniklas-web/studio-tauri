@@ -124,7 +124,7 @@ pub async fn koppeln(app: AppHandle, edge: String, code: String) -> Result<Stand
     let k = konfig::Konfig {
         edge: basis, platz_id: a.platz.id.clone(), tenant_id: a.edge.tenant_id.clone(), edge_name: a.edge.name.clone(),
         platz_name: a.platz.name.clone(), platz_nr: a.platz.nr.clone(), art: a.platz.art.clone(),
-        ausrichtung: a.platz.ausrichtung.clone(),
+        ausrichtung: a.platz.ausrichtung.clone(), zoom: a.platz.zoom,
     };
     let z = app.state::<Zustand>();
     k.speichern(&z.ordner).map_err(|e| format!("{e:#}"))?;

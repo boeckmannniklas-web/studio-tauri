@@ -6,6 +6,8 @@
 //!   Verbindung“, und der Agent sucht den Server seines Mandanten im Netz (neue Adresse?).
 //! * **Aufträge** per Long-Poll – jeder Auftrag läuft für sich, damit ein Abbruch einen
 //!   wartenden Finger erreicht.
+//! * **Karten** vom Magnetkartenleser – ein Thread hält den COM-Anschluss offen, jede Karte geht
+//!   verschlüsselt an den Server (`ich/ereignis`).
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -17,7 +19,7 @@ use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 
 use crate::edge::{Agentinfo, Auftrag, Edge, EdgeFehler, Ergebnis};
-use crate::geraete::{self, secugen};
+use crate::geraete::{self, magnetkarte, secugen};
 use crate::{fenster, konfig, krypto, suche, Zustand};
 
 const HERZSCHLAG: Duration = Duration::from_secs(30);
@@ -63,6 +65,8 @@ pub fn starten(app: &AppHandle) {
     laeufe.push(tauri::async_runtime::spawn(async move { herzschlag(a).await }));
     let a = app.clone();
     laeufe.push(tauri::async_runtime::spawn(async move { auftraege(a).await }));
+    let a = app.clone();
+    laeufe.push(tauri::async_runtime::spawn(async move { karten(a).await }));
 }
 
 pub fn anhalten(app: &AppHandle) {
@@ -110,6 +114,20 @@ async fn herzschlag(app: AppHandle) {
                         _ => false,
                     }
                 };
+                let zoom_neu = {
+                    let mut k = z.konfig.lock().unwrap();
+                    match k.as_mut() {
+                        Some(k) if k.zoom != platz.zoom => {
+                            k.zoom = platz.zoom;
+                            let _ = k.speichern(&z.ordner);
+                            true
+                        }
+                        _ => false,
+                    }
+                };
+                if zoom_neu {
+                    fenster::zoom_anwenden(&app);
+                }
                 *z.zuletzt.lock().unwrap() = Some(platz.clone());
                 let offline = z.offline.swap(false, Ordering::Relaxed);
                 if offline || geaendert {
@@ -208,6 +226,14 @@ async fn bearbeiten(app: AppHandle, edge: Edge, a: Auftrag) {
                 Ok(Err(e)) => fehler(format!("{e:#}")),
                 Err(e) => fehler(e.to_string()),
             },
+            Some("magnetkarte") => {
+                let s = magnetkarte::stand();
+                match s.anschluss {
+                    Some(a) => gut(json!({ "meldung": format!(
+                        "Magnetkartenleser an {a} bereit · {} Karten gelesen – zum Test eine Karte durchziehen", s.karten) })),
+                    None => fehler(magnetkarte::zustand().1.unwrap_or_else(|| "Kein Magnetkartenleser verbunden".into())),
+                }
+            }
             _ => fehler("Dieses Gerät wird am Platz noch nicht unterstützt"),
         },
         "finger_aufnehmen" => finger(&app, &a).await,
@@ -248,6 +274,54 @@ async fn finger(app: &AppHandle, a: &Auftrag) -> Ergebnis {
             Ergebnis { ok: false, daten: json!({}), meldung: Some(m), code }
         }
         Err(e) => fehler(e.to_string()),
+    }
+}
+
+/// Setzt beim Ende des Tasks (auch beim Abbrechen) das Aus-Zeichen für den Thread des Lesers.
+struct Aus(Arc<AtomicBool>);
+
+impl Drop for Aus {
+    fn drop(&mut self) {
+        self.0.store(true, Ordering::Relaxed);
+    }
+}
+
+/// Karten vom Magnetkartenleser: ein Thread liest den COM-Anschluss, dieser Task meldet jede
+/// Karte verschlüsselt an den Server. Die Nummer selbst kommt in kein Protokoll.
+async fn karten(app: AppHandle) {
+    let aus = Arc::new(AtomicBool::new(false));
+    let _wache = Aus(aus.clone());
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+    let a = aus.clone();
+    if let Err(e) = std::thread::Builder::new()
+        .name("magnetkarte".into())
+        .spawn(move || magnetkarte::lesen(a, move |z| {
+            let _ = tx.send(z);
+        }))
+    {
+        log::warn!("Magnetkartenleser: Thread nicht gestartet: {e}");
+        return;
+    }
+    while let Some(zeile) = rx.recv().await {
+        let Some(edge) = app.state::<Zustand>().edge() else { return };
+        match karte_melden(&edge, &zeile).await {
+            Ok(()) => log::info!("Karte gemeldet ({} Zeichen)", zeile.trim().len()),
+            Err(e) => log::warn!("Karte nicht gemeldet: {e:#}"),
+        }
+    }
+}
+
+async fn karte_melden(edge: &Edge, zeile: &str) -> anyhow::Result<()> {
+    let schluessel = konfig::schluessel_lesen().ok_or_else(|| anyhow::anyhow!("Schlüssel fehlt – Platz neu koppeln"))?;
+    // Dieselbe Kennung beim zweiten Versuch: kam der erste doch an, zählt der Server die Karte nicht doppelt
+    let id = hex::encode(rand::random::<[u8; 16]>());
+    let daten = krypto::verschluesseln(&schluessel, &id, zeile.as_bytes())?;
+    match edge.ereignis("magnetkarte", &id, &daten).await {
+        Err(EdgeFehler::Netz(_)) => {
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            edge.ereignis("magnetkarte", &id, &daten).await.map_err(|e| anyhow::anyhow!("{e}"))
+        }
+        r => r.map_err(|e| anyhow::anyhow!("{e}")),
     }
 }
 

@@ -32,6 +32,13 @@ pub struct Konfig {
     pub art: String,
     #[serde(default)]
     pub ausrichtung: String,
+    /// Größe der Oberfläche in Prozent – gemerkt, damit sie schon vor dem ersten Herzschlag stimmt
+    #[serde(default = "hundert")]
+    pub zoom: u32,
+}
+
+fn hundert() -> u32 {
+    100
 }
 
 impl Konfig {

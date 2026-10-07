@@ -58,12 +58,19 @@ pub struct PlatzInfo {
     pub ausrichtung: String,
     #[serde(default)]
     pub leerlauf: u32,
+    /// Größe der Oberfläche in Prozent (Edge ab Kassenplätze Stufe 2; ältere schicken nichts)
+    #[serde(default = "hundert")]
+    pub zoom: u32,
     #[serde(default)]
     pub wartungs_pin: bool,
     #[serde(default)]
     pub usb: Vec<Value>,
     #[serde(default)]
     pub edge_version: String,
+}
+
+fn hundert() -> u32 {
+    100
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -185,6 +192,18 @@ impl Edge {
         let _: Value = antwort(
             self.mit(self.client.post(api(&self.basis, &format!("/ich/auftraege/{auftrag}/ergebnis"))))
                 .json(e)
+                .send()
+                .await?,
+        )
+        .await?;
+        Ok(())
+    }
+
+    /// Ein Gerät meldet sich von selbst (Karte am Magnetkartenleser) – Inhalt verschlüsselt.
+    pub async fn ereignis(&self, typ: &str, id: &str, daten: &str) -> Result<(), EdgeFehler> {
+        let _: Value = antwort(
+            self.mit(self.client.post(api(&self.basis, "/ich/ereignis")))
+                .json(&serde_json::json!({ "typ": typ, "id": id, "daten": daten }))
                 .send()
                 .await?,
         )

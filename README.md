@@ -17,7 +17,9 @@ Eingestellt wird jeder Platz am Studio-Server unter **Kassenverwaltung → Kasse
 3. Die App sucht den Studio-Server selbst (`studio.local`). Code eingeben oder den QR-Code mit
    einem Scanner ins Feld scannen → **Koppeln**.
 4. Steckt ein Fingerabdruckscanner am PC: **Geräte einrichten** installiert Treiber und
-   Herstellerbibliothek (fragt nach Administratorrechten).
+   Herstellerbibliothek (fragt nach Administratorrechten). Ein Magnetkartenleser am
+   USB-Seriell-Wandler (etwa CP2102) braucht nur den Windows-Treiber des Wandlers, den Windows
+   meist selbst holt; die App findet seinen COM-Anschluss von allein.
 5. **Starten**. Ab jetzt startet die App mit Windows und öffnet die Oberfläche von selbst.
 
 Die App ist pro Benutzer installiert: Updates laufen ohne Administratorrechte, nachts zwischen
@@ -42,9 +44,16 @@ Einen öffentlich zugänglichen Kiosk zusätzlich auf Windows-Ebene absichern:
 * Gerätetoken und Bildschlüssel liegen in der Windows-Anmeldeinformationsverwaltung.
 * Fingerabdruck: Der Platz schickt nur das Bild, verschlüsselt (AES-256-GCM, Schlüssel aus der
   Kopplung). Merkmale und Vergleich rechnet der Server; gespeichert wird hier nichts.
+* Magnetkarte: Jede Karte geht verschlüsselt an den Server (derselbe Schlüssel, die Kennung der
+  Meldung als Zusatzangabe); wem sie gehört, weiß nur der Server. Die Nummer kommt in kein Protokoll.
 * Updates sind signiert (minisign); der öffentliche Schlüssel steht in `src-tauri/tauri.conf.json`.
 * Herstellerdateien (SecuGen) liegen nie in diesem Repo. Der Server liefert sie als Gerätepaket.
 * Im Studio-Netz spricht die App HTTP mit dem Server (wie die Browser bisher). TLS im LAN folgt.
+
+## Größe der Oberfläche
+
+Der Zoom des Platzes (50–200 %) wird am Server eingestellt (Kassenverwaltung → Kassenplätze →
+Allgemein) und gilt nach dem nächsten Herzschlag. Strg + / − bleiben am Platz gesperrt.
 
 ## Entwickeln
 
