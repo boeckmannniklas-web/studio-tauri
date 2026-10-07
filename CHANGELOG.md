@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 – 2026-10-07
+
+Stufe 2 der Kassenplätze, zweiter Teil. Braucht den Studio-Server mit Bondrucker am Platz; an einem
+älteren Server bleibt alles wie in 0.2.0.
+
+- Bondrucker per USB am Platz: Der Server schickt den fertigen Bon (ESC/POS) als Auftrag „drucken“,
+  die App gibt ihn roh über den Windows-Druckspooler aus. Welcher Drucker, stellt der Server ein;
+  sonst nimmt die App den ersten, der nach Bondrucker aussieht (Epson, Star, TM-, Bon …), sonst den
+  Standarddrucker. Der Herzschlag meldet die Drucker in Windows zur Auswahl.
+- QR-/Barcode-Scanner im Tastaturmodus gelten als „bereit“: Sie brauchen die App nicht, die
+  Oberfläche erkennt ihren Scan selbst.
+
 ## 0.2.0 – 2026-10-07
 
 Stufe 2 der Kassenplätze, erster Teil. Braucht den Studio-Server mit Kassenplätze Stufe 2

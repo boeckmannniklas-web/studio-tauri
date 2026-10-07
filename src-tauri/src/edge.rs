@@ -47,6 +47,9 @@ pub struct Agentinfo {
     pub modell: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seriennummer: Option<String>,
+    /// Drucker in Windows – am Server wählbar für den Bondrucker am Platz
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub windows_drucker: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]

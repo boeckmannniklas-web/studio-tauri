@@ -1,9 +1,11 @@
 //! Geräte, die per USB an diesem PC stecken.
 //!
 //! Der Agent meldet sie dem Studio-Server (Herzschlag, „USB-Geräte suchen“). Nutzbar sind der
-//! SecuGen-Fingerabdruckscanner und Magnetkartenleser an einem USB-Seriell-Wandler; QR-Scanner
-//! und Bondrucker werden erkannt und gemeldet, ihre Unterstützung folgt.
+//! SecuGen-Fingerabdruckscanner, Magnetkartenleser an einem USB-Seriell-Wandler und Bondrucker
+//! (über den Windows-Drucker). QR-Scanner im Tastaturmodus braucht die App nicht: sie tippen in die
+//! Oberfläche, die erkennt den Scan selbst.
 
+pub mod drucker;
 pub mod magnetkarte;
 pub mod pakete;
 pub mod secugen;
@@ -68,9 +70,11 @@ pub fn suchen() -> Vec<UsbGeraet> {
             out.push(UsbGeraet { typ: "magnetkarte", usb_id, anschluss: magnetkarte::stand().anschluss, seriennummer, modell,
                                  klasse: None, status, meldung });
         } else if QR.contains(&vid) {
-            out.push(UsbGeraet { typ: "qr", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status: "erkannt".into(), meldung: None });
+            out.push(UsbGeraet { typ: "qr", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status: "bereit".into(),
+                                 meldung: Some("Tastaturmodus – scannt direkt in die Oberfläche".into()) });
         } else if DRUCKER.contains(&vid) {
-            out.push(UsbGeraet { typ: "drucker", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status: "erkannt".into(), meldung: None });
+            let (status, meldung) = drucker::zustand();
+            out.push(UsbGeraet { typ: "drucker", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status, meldung });
         }
     }
     out

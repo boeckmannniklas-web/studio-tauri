@@ -19,7 +19,7 @@ use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 
 use crate::edge::{Agentinfo, Auftrag, Edge, EdgeFehler, Ergebnis};
-use crate::geraete::{self, magnetkarte, secugen};
+use crate::geraete::{self, drucker, magnetkarte, secugen};
 use crate::{fenster, konfig, krypto, suche, Zustand};
 
 const HERZSCHLAG: Duration = Duration::from_secs(30);
@@ -34,6 +34,7 @@ pub fn agentinfo() -> Agentinfo {
         hersteller,
         modell,
         seriennummer: machine_uid::get().ok(),
+        windows_drucker: Some(drucker::liste()).filter(|l| !l.is_empty()),
     }
 }
 
@@ -237,6 +238,7 @@ async fn bearbeiten(app: AppHandle, edge: Edge, a: Auftrag) {
             _ => fehler("Dieses Gerät wird am Platz noch nicht unterstützt"),
         },
         "finger_aufnehmen" => finger(&app, &a).await,
+        "drucken" => drucken(&a).await,
         andere => fehler(format!("Unbekannter Auftrag „{andere}“ – App aktualisieren?")),
     };
     if let Err(e) = edge.ergebnis(&a.id, &ergebnis).await {
@@ -273,6 +275,20 @@ async fn finger(app: &AppHandle, a: &Auftrag) -> Ergebnis {
             let code = if m.contains("Kein Finger") { Some(54) } else if m.contains("Abgebrochen") { Some(-1) } else { None };
             Ergebnis { ok: false, daten: json!({}), meldung: Some(m), code }
         }
+        Err(e) => fehler(e.to_string()),
+    }
+}
+
+/// Bon vom Server (ESC/POS) roh an den Windows-Drucker.
+async fn drucken(a: &Auftrag) -> Ergebnis {
+    let daten = match a.daten["daten"].as_str().map(|d| B64.decode(d)) {
+        Some(Ok(d)) => d,
+        _ => return fehler("Druckdaten fehlen oder sind nicht lesbar"),
+    };
+    let eingestellt = a.daten["drucker"].as_str().map(String::from);
+    match tauri::async_runtime::spawn_blocking(move || drucker::drucken(eingestellt.as_deref(), &daten)).await {
+        Ok(Ok(name)) => gut(json!({ "meldung": format!("gedruckt auf {name}") })),
+        Ok(Err(e)) => fehler(format!("{e:#}")),
         Err(e) => fehler(e.to_string()),
     }
 }

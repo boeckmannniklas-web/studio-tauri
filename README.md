@@ -19,7 +19,9 @@ Eingestellt wird jeder Platz am Studio-Server unter **Kassenverwaltung → Kasse
 4. Steckt ein Fingerabdruckscanner am PC: **Geräte einrichten** installiert Treiber und
    Herstellerbibliothek (fragt nach Administratorrechten). Ein Magnetkartenleser am
    USB-Seriell-Wandler (etwa CP2102) braucht nur den Windows-Treiber des Wandlers, den Windows
-   meist selbst holt; die App findet seinen COM-Anschluss von allein.
+   meist selbst holt; die App findet seinen COM-Anschluss von allein. Ein QR-/Barcode-Scanner im
+   Tastaturmodus braucht gar nichts. Ein Bondrucker wird in Windows mit dem Treiber des Herstellers
+   eingerichtet; die App druckt den Bon vom Server roh (ESC/POS) auf diesen Windows-Drucker.
 5. **Starten**. Ab jetzt startet die App mit Windows und öffnet die Oberfläche von selbst.
 
 Die App ist pro Benutzer installiert: Updates laufen ohne Administratorrechte, nachts zwischen
