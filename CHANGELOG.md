@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.2 – 2026-10-08
+
+- Fingerabdruckscanner mit einem Klick: „Geräte einrichten“ installiert alle SecuGen-Treiber des
+  Gerätepakets mit einem einzigen `pnputil`-Aufruf – die Benutzerkontensteuerung fragt nur noch einmal
+  (vorher je Scannerfamilie). Braucht einen Studio-Server, der das Gerätepaket mitbringt
+  (SDK 4.3.1 + Treiber für Hamster Plus, IV, Pro 20, Pro).
+- Anleitung „Fingerabdruckscanner einrichten“ in Einrichtung und Wartungsmenü: Schritte, unterstützte
+  Scanner, was tun, wenn es nicht klappt. Fehlt ein Treiber, ist „Geräte einrichten“ der hervorgehobene
+  nächste Schritt und die Anleitung aufgeklappt. Ausführlich: `docs/GERAETE-WINDOWS.md`.
+
 ## 0.4.1 – 2026-10-08
 
 - „Geräte einrichten“ installiert die signoPAD-API für das Unterschriftenpad selbst: Die App lädt das

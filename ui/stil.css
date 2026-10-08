@@ -55,3 +55,11 @@ button:disabled { opacity: .5; cursor: default; }
 dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0 0 18px; font-size: 14px; }
 dt { color: var(--ink-3); }
 dd { margin: 0; }
+details.anleitung { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+  font-size: 13px; color: var(--ink-3); background: var(--muted-bg); }
+details.anleitung summary { cursor: pointer; font-weight: 700; color: var(--primary); font-size: 14px; }
+details.anleitung ol, details.anleitung ul { margin: 8px 0; padding-left: 20px; }
+details.anleitung li { margin: 4px 0; }
+details.anleitung p { margin: 8px 0 4px; }
+details.anleitung code { font-family: Consolas, monospace; font-size: 12px; background: #fff; border: 1px solid var(--line);
+  border-radius: 6px; padding: 1px 5px; user-select: text; }

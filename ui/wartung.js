@@ -69,6 +69,7 @@ $('beenden').onclick = (e) => los(e.target, () => befehl('beenden'));
 
 (async () => {
   pad();
+  anleitungFinger($('anleitung'));
   const s = await befehl('wartung_info');
   $('platz').textContent = s.platz_name ? `Kassenplatz ${s.platz_nr} · ${s.platz_name}` : '';
   if (s.wartung_offen || !s.gekoppelt) { await menue(); return; }

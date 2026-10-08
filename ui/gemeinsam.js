@@ -39,3 +39,28 @@ function geraeteListe(el, usb) {
     }
   }
 }
+
+// Anleitung zum Fingerabdruckscanner – auf der Einrichtungs- und der Wartungsseite gleich
+const ANLEITUNG_FINGER = `
+<summary>Anleitung: Fingerabdruckscanner einrichten</summary>
+<ol>
+  <li>Scanner direkt an einen USB-Anschluss dieses PCs stecken (nicht über einen Hub). Er erscheint
+    oben unter „Geräte an diesem PC“.</li>
+  <li><b>„Geräte einrichten“</b> tippen. Die App holt Treiber und SecuGen-Bibliothek vom Studio-Server.</li>
+  <li>Windows fragt <b>einmal</b>, ob die App Änderungen vornehmen darf → <b>Ja</b>. Ohne
+    Administratorkonto: Anmeldung eines Administrators eingeben.</li>
+  <li>Nach wenigen Sekunden steht beim Scanner <b>„bereit“</b>. Ein Neustart ist nicht nötig.</li>
+</ol>
+<p><b>Unterstützte Scanner</b> (SecuGen, Windows 10/11 64 Bit): Hamster Plus (SDU03M, SDU03P, FDU03) ·
+  Hamster IV (FDU04A, SDU04P) · Hamster Pro 20 (U20) · Hamster Pro und Pro Duo (UPx, UPx-P).</p>
+<p><b>Klappt es nicht?</b></p>
+<ul>
+  <li>„Kein Gerätepaket auf diesem Server“: Der Studio-Server ist zu alt – erst ihn aktualisieren.</li>
+  <li>Scanner steht weiter auf „Treiber fehlt“: App im Wartungsmenü beenden und neu starten.</li>
+  <li>Scanner taucht nicht auf: anderen USB-Anschluss oder anderes Kabel nehmen.</li>
+  <li>Von Hand (Eingabeaufforderung als Administrator): Treiber mit
+    <code>pnputil /add-driver "&lt;Ordner&gt;\\SGFu03x64.inf" /install</code> (SDU03M; die anderen
+    Scanner haben eigene INF-Dateien), dann die DLLs aus dem SecuGen <i>FDx SDK Pro for Windows</i>,
+    Ordner <code>bin\\x64</code>, nach <code>C:\\ProgramData\\StudioKassenplatz\\geraete\\secugen</code> kopieren.</li>
+</ul>`;
+function anleitungFinger(el) { el.innerHTML = ANLEITUNG_FINGER; }

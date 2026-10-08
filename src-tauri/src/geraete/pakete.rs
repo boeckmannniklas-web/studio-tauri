@@ -9,7 +9,7 @@
 //! `pruefsummen.json`:
 //! ```json
 //! { "dateien": { "sgfplib.dll": "<sha256>", … },
-//!   "treiber": ["treiber/sgfdu03.inf"],                         // per pnputil, oder
+//!   "treiber": ["treiber/FDU03/SGFu03x64.inf", …],             // per pnputil (ein Aufruf), oder
 //!   "installer": { "datei": "setup.exe", "argumente": "/S" } }   // Herstellerinstaller
 //! ```
 
@@ -118,6 +118,22 @@ pub(crate) fn als_admin(_programm: &str, _argumente: &str, _ordner: &Path) -> Re
     bail!("Treiber werden nur unter Windows installiert")
 }
 
+/// Ein einziger pnputil-Aufruf für alle Treiber des Pakets – so fragt die Benutzerkontensteuerung
+/// nur einmal. Eine INF: genau sie; mehrere: alle INF unter ihrem gemeinsamen Ordner (`/subdirs`).
+/// Dort liegt nur, was aus dem geprüften Paket kommt; Windows prüft zudem die Signatur.
+fn pnputil_argumente(ziel: &Path, treiber: &[String]) -> Result<Option<String>> {
+    let pfade = treiber.iter().map(|t| sicherer_name(t).map(|n| ziel.join(n))).collect::<Result<Vec<_>>>()?;
+    let Some(erster) = pfade.first() else { return Ok(None) };
+    if pfade.len() == 1 {
+        return Ok(Some(format!("/add-driver \"{}\" /install", erster.display())));
+    }
+    let mut basis = erster.parent().unwrap_or(ziel).to_path_buf();
+    while !pfade.iter().all(|p| p.starts_with(&basis)) {
+        basis = basis.parent().unwrap_or(ziel).to_path_buf();
+    }
+    Ok(Some(format!("/add-driver \"{}\" /subdirs /install", basis.join("*.inf").display())))
+}
+
 /// Paket auspacken und Treiber installieren. Fragt nach Administratorrechten.
 pub fn einrichten(typ: &str, zip: &[u8]) -> Result<String> {
     let (ziel, pruef) = auspacken(typ, zip)?;
@@ -128,12 +144,11 @@ pub fn einrichten(typ: &str, zip: &[u8]) -> Result<String> {
             bail!("Herstellerinstaller endete mit Code {code}");
         }
     }
-    for inf in &pruef.treiber {
-        let pfad = ziel.join(sicherer_name(inf)?);
-        let code = als_admin("pnputil.exe", &format!("/add-driver \"{}\" /install", pfad.display()), &ziel)?;
+    if let Some(argumente) = pnputil_argumente(&ziel, &pruef.treiber)? {
+        let code = als_admin("pnputil.exe", &argumente, &ziel)?;
         // 3010: Neustart empfohlen; 259: kein neueres Gerät betroffen – beides ist in Ordnung
         if code != 0 && code != 3010 && code != 259 {
-            bail!("Treiber {inf} ließ sich nicht installieren (pnputil {code})");
+            bail!("Treiber ließen sich nicht installieren (pnputil {code})");
         }
     }
     Ok(format!("Gerätepaket „{typ}“ eingerichtet ({} Dateien)", pruef.dateien.len()))
@@ -158,5 +173,17 @@ mod tests {
         }
         assert!(auspacken("test", &puffer).unwrap_err().to_string().contains("Prüfsumme"));
         assert!(sicherer_name("../boese.dll").is_err());
+    }
+
+    #[test]
+    fn alle_treiber_mit_einem_aufruf() {
+        let ziel = Path::new("/g/secugen");
+        assert_eq!(pnputil_argumente(ziel, &[]).unwrap(), None);
+        let eine = pnputil_argumente(ziel, &["treiber/FDU03/a.inf".into()]).unwrap().unwrap();
+        assert_eq!(eine, format!("/add-driver \"{}\" /install", ziel.join("treiber/FDU03/a.inf").display()));
+        let vier: Vec<String> = ["FDU03/a.inf", "FDU04/b.inf", "HU20/c.inf", "HUPx/d.inf"].iter().map(|t| format!("treiber/{t}")).collect();
+        let alle = pnputil_argumente(ziel, &vier).unwrap().unwrap();
+        assert_eq!(alle, format!("/add-driver \"{}\" /subdirs /install", ziel.join("treiber").join("*.inf").display()));
+        assert!(pnputil_argumente(ziel, &["../x.inf".into(), "a.inf".into()]).is_err());
     }
 }

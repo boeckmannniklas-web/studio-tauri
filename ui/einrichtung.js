@@ -48,6 +48,11 @@ function fertigZeigen(s) {
   $('gekoppelt').textContent = `Gekoppelt als Kassenplatz ${s.platz_nr} · ${s.platz_name} (${ARTEN[s.art] || s.art}) mit ${s.edge_name || s.edge}.`;
   geraeteListe($('usb'), s.usb);
   zeigen('treiber', s.usb.some((g) => g.typ === 'finger' || (g.typ === 'unterschrift' && g.status === 'treiber_fehlt')));
+  // Fehlt noch etwas, ist „Geräte einrichten“ der nächste Schritt
+  const fehlt = s.usb.some((g) => g.status === 'treiber_fehlt');
+  $('treiber').classList.toggle('blau', fehlt);
+  $('starten').classList.toggle('blau', !fehlt);
+  $('anleitung').open = s.usb.some((g) => g.typ === 'finger' && g.status !== 'bereit');
 }
 
 async function koppeln() {
@@ -71,6 +76,7 @@ async function treiber() {
   finally { $('treiber').disabled = false; }
 }
 
+anleitungFinger($('anleitung'));
 $('code').addEventListener('input', (e) => { e.target.value = formatCode(e.target.value); });
 $('code').addEventListener('keydown', (e) => { if (e.key === 'Enter') koppeln(); });
 $('suchen').onclick = suchen;

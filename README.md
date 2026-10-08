@@ -38,6 +38,9 @@ installieren, entkoppeln, App beenden. Anders lässt sich die App nicht schließ
 Einen öffentlich zugänglichen Kiosk zusätzlich auf Windows-Ebene absichern:
 [docs/KIOSK-WINDOWS.md](docs/KIOSK-WINDOWS.md).
 
+Fingerabdruckscanner, Unterschriftenpad und andere USB-Geräte einrichten – mit einem Klick und von
+Hand: [docs/GERAETE-WINDOWS.md](docs/GERAETE-WINDOWS.md).
+
 ## Sicherheit
 
 * Die Oberfläche des Studio-Servers läuft im Fenster der App, bekommt aber **keinen Zugriff auf

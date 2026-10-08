@@ -265,7 +265,7 @@ pub fn zustand() -> (String, Option<String>) {
     if sdk::da() {
         ("bereit".into(), None)
     } else {
-        ("treiber_fehlt".into(), Some("SecuGen-Treiber fehlt – Wartungsmenü → Geräte einrichten".into()))
+        ("treiber_fehlt".into(), Some("SecuGen-Treiber fehlt – „Geräte einrichten“ tippen".into()))
     }
 }
 
