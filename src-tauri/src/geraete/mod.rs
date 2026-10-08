@@ -9,6 +9,7 @@ pub mod drucker;
 pub mod magnetkarte;
 pub mod pakete;
 pub mod secugen;
+pub mod unterschrift;
 
 use serde::Serialize;
 
@@ -34,6 +35,7 @@ pub struct UsbGeraet {
 }
 
 const SECUGEN: u16 = 0x1162;
+const SIGNOTEC: u16 = 0x2133;
 /// Hersteller von QR-/Barcode-Scannern und Bondruckern, die wir erkennen (noch ohne Unterstützung)
 const QR: [u16; 5] = [0x0c2e /* Honeywell */, 0x05e0 /* Zebra */, 0x05f9 /* Datalogic */, 0x1eab /* Newland */, 0x26f1 /* RTscan */];
 const DRUCKER: [u16; 3] = [0x04b8 /* Epson */, 0x0519 /* Star */, 0x0dd4 /* Custom */];
@@ -69,6 +71,10 @@ pub fn suchen() -> Vec<UsbGeraet> {
             let modell = Some(format!("Magnetkartenleser ({})", produkt.unwrap_or_else(|| chip.into())));
             out.push(UsbGeraet { typ: "magnetkarte", usb_id, anschluss: magnetkarte::stand().anschluss, seriennummer, modell,
                                  klasse: None, status, meldung });
+        } else if vid == SIGNOTEC {
+            let (status, meldung) = unterschrift::zustand();
+            out.push(UsbGeraet { typ: "unterschrift", usb_id, anschluss: None, seriennummer,
+                                 modell: produkt.or_else(|| Some("signotec-Pad".into())), klasse: None, status, meldung });
         } else if QR.contains(&vid) {
             out.push(UsbGeraet { typ: "qr", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status: "bereit".into(),
                                  meldung: Some("Tastaturmodus – scannt direkt in die Oberfläche".into()) });

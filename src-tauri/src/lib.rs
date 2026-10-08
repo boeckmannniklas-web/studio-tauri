@@ -36,6 +36,8 @@ pub struct Zustand {
     pub offline: AtomicBool,
     pub agent: Mutex<Vec<tauri::async_runtime::JoinHandle<()>>>,
     pub abbrueche: Mutex<HashMap<String, Arc<AtomicBool>>>,
+    /// Laufende Vorgänge am Unterschriftenpad: Kennung → Eingang (Befehle vom Bildschirm)
+    pub pad_vorgaenge: Mutex<HashMap<String, std::sync::mpsc::Sender<geraete::unterschrift::Eingang>>>,
     pub zuletzt: Mutex<Option<edge::PlatzInfo>>,
     pub update: Mutex<Option<(tauri_plugin_updater::Update, Vec<u8>)>>,
     /// Hinweis für die Einrichtungsseite (z. B. „wurde entkoppelt“)
@@ -101,6 +103,7 @@ pub fn run() {
                 offline: AtomicBool::new(false),
                 agent: Mutex::new(Vec::new()),
                 abbrueche: Mutex::new(HashMap::new()),
+                pad_vorgaenge: Mutex::new(HashMap::new()),
                 zuletzt: Mutex::new(None),
                 update: Mutex::new(None),
                 hinweis: Mutex::new(None),

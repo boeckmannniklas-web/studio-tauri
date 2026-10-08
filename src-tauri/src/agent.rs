@@ -19,7 +19,7 @@ use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 
 use crate::edge::{Agentinfo, Auftrag, Edge, EdgeFehler, Ergebnis};
-use crate::geraete::{self, drucker, magnetkarte, secugen};
+use crate::geraete::{self, drucker, magnetkarte, secugen, unterschrift};
 use crate::{fenster, konfig, krypto, suche, Zustand};
 
 const HERZSCHLAG: Duration = Duration::from_secs(30);
@@ -239,6 +239,18 @@ async fn bearbeiten(app: AppHandle, edge: Edge, a: Auftrag) {
         },
         "finger_aufnehmen" => finger(&app, &a).await,
         "drucken" => drucken(&a).await,
+        "signotec" => pad_vorgang(&app, &edge, &a).await,
+        "signotec_befehl" => {
+            let vorgang = a.daten["vorgang"].as_str().unwrap_or_default();
+            let cmd = a.daten["cmd"].as_str().unwrap_or_default().to_string();
+            match z.pad_vorgaenge.lock().unwrap().get(vorgang) {
+                Some(tx) => {
+                    let _ = tx.send(unterschrift::Eingang::Befehl(cmd));
+                    gut(json!({}))
+                }
+                None => fehler("Kein laufender Vorgang am Pad"),
+            }
+        }
         andere => fehler(format!("Unbekannter Auftrag „{andere}“ – App aktualisieren?")),
     };
     if let Err(e) = edge.ergebnis(&a.id, &ergebnis).await {
@@ -276,6 +288,59 @@ async fn finger(app: &AppHandle, a: &Auftrag) -> Ergebnis {
             Ergebnis { ok: false, daten: json!({}), meldung: Some(m), code }
         }
         Err(e) => fehler(e.to_string()),
+    }
+}
+
+/// Ein Vorgang am Unterschriftenpad: läuft im eigenen Thread; Zwischenstände (Stiftpunkte …) gehen
+/// gebündelt als Meldung „signotec“ an den Server, das Ende als Ergebnis dieses Auftrags.
+async fn pad_vorgang(app: &AppHandle, edge: &Edge, a: &Auftrag) -> Ergebnis {
+    let z = app.state::<Zustand>();
+    let vorgang = a.daten["vorgang"].as_str().unwrap_or(&a.id).to_string();
+    let (tx, rx) = std::sync::mpsc::channel::<unterschrift::Eingang>();
+    z.pad_vorgaenge.lock().unwrap().insert(vorgang.clone(), tx.clone());
+    let (mtx, mrx) = tokio::sync::mpsc::unbounded_channel::<Value>();
+    let melder = tauri::async_runtime::spawn(pad_meldungen(edge.clone(), vorgang.clone(), mrx));
+    let befehl = a.daten.clone();
+    let ende = tauri::async_runtime::spawn_blocking(move || {
+        unterschrift::vorgang(&befehl, &|ev| { let _ = mtx.send(ev); }, rx, tx)
+    })
+    .await;
+    // Erst alle Zwischenstände hinaus, dann das Ende – die Reihenfolge zählt am Server
+    let _ = melder.await;
+    z.pad_vorgaenge.lock().unwrap().remove(&vorgang);
+    match ende {
+        Ok(ereignisse) => gut(json!({ "ereignisse": ereignisse })),
+        Err(e) => fehler(e.to_string()),
+    }
+}
+
+/// Stiftpunkte sammeln (bis 150 ms bzw. 60 Stück) und als eine Meldung schicken; alles andere sofort.
+async fn pad_meldungen(edge: Edge, vorgang: String, mut rx: tokio::sync::mpsc::UnboundedReceiver<Value>) {
+    while let Some(erstes) = rx.recv().await {
+        let mut stapel = vec![erstes];
+        if stapel[0]["ev"] == "punkt" {
+            let frist = tokio::time::sleep(Duration::from_millis(150));
+            tokio::pin!(frist);
+            loop {
+                tokio::select! {
+                    _ = &mut frist => break,
+                    weiter = rx.recv() => match weiter {
+                        Some(v) => {
+                            let schluss = v["ev"] != "punkt";
+                            stapel.push(v);
+                            if schluss || stapel.len() >= 60 {
+                                break;
+                            }
+                        }
+                        None => break,
+                    },
+                }
+            }
+        }
+        let text = json!({ "vorgang": vorgang, "ereignisse": stapel }).to_string();
+        if let Err(e) = melden(&edge, "signotec", &text).await {
+            log::warn!("Pad-Meldung nicht angekommen: {e:#}");
+        }
     }
 }
 
@@ -320,22 +385,23 @@ async fn karten(app: AppHandle) {
     }
     while let Some(zeile) = rx.recv().await {
         let Some(edge) = app.state::<Zustand>().edge() else { return };
-        match karte_melden(&edge, &zeile).await {
+        match melden(&edge, "magnetkarte", &zeile).await {
             Ok(()) => log::info!("Karte gemeldet ({} Zeichen)", zeile.trim().len()),
             Err(e) => log::warn!("Karte nicht gemeldet: {e:#}"),
         }
     }
 }
 
-async fn karte_melden(edge: &Edge, zeile: &str) -> anyhow::Result<()> {
+/// Eine Meldung verschlüsselt an den Server (`ich/ereignis`): Karte vom Leser, Stiftpunkte vom Pad.
+async fn melden(edge: &Edge, typ: &str, inhalt: &str) -> anyhow::Result<()> {
     let schluessel = konfig::schluessel_lesen().ok_or_else(|| anyhow::anyhow!("Schlüssel fehlt – Platz neu koppeln"))?;
-    // Dieselbe Kennung beim zweiten Versuch: kam der erste doch an, zählt der Server die Karte nicht doppelt
+    // Dieselbe Kennung beim zweiten Versuch: kam der erste doch an, zählt der Server sie nicht doppelt
     let id = hex::encode(rand::random::<[u8; 16]>());
-    let daten = krypto::verschluesseln(&schluessel, &id, zeile.as_bytes())?;
-    match edge.ereignis("magnetkarte", &id, &daten).await {
+    let daten = krypto::verschluesseln(&schluessel, &id, inhalt.as_bytes())?;
+    match edge.ereignis(typ, &id, &daten).await {
         Err(EdgeFehler::Netz(_)) => {
             tokio::time::sleep(Duration::from_millis(500)).await;
-            edge.ereignis("magnetkarte", &id, &daten).await.map_err(|e| anyhow::anyhow!("{e}"))
+            edge.ereignis(typ, &id, &daten).await.map_err(|e| anyhow::anyhow!("{e}"))
         }
         r => r.map_err(|e| anyhow::anyhow!("{e}")),
     }

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0 – 2026-10-08
+
+- signotec-Unterschriftenpad per USB am Platz (Sigma, Zeta, Omega, Gamma, Delta, Alpha): Die App lädt die
+  `STPadLib.dll` der signoPAD-API (64 Bit) von signotec – aus dem Gerätepaket-Ordner oder aus dem
+  Programmordner, in den das Setup von signotec sie legt – und macht, was am Studio-Server der
+  Hilfsprozess tut: Bildschirm vom Server zeigen, Stiftpunkte gebündelt und verschlüsselt melden
+  (Spiegelung am Bildschirm), Tasten Löschen/OK/Abbrechen am Pad wie am Bildschirm, am Ende Bild und
+  SignData. Gerendert, durchsichtig gemacht und am Vertrag abgelegt wird weiter am Server.
+- Ohne signoPAD-API meldet die Geräteliste das Pad mit „Treiber fehlt“ und dem Hinweis, sie zu installieren.
+
 ## 0.3.0 – 2026-10-07
 
 Stufe 2 der Kassenplätze, zweiter Teil. Braucht den Studio-Server mit Bondrucker am Platz; an einem

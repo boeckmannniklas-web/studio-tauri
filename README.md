@@ -22,6 +22,8 @@ Eingestellt wird jeder Platz am Studio-Server unter **Kassenverwaltung → Kasse
    meist selbst holt; die App findet seinen COM-Anschluss von allein. Ein QR-/Barcode-Scanner im
    Tastaturmodus braucht gar nichts. Ein Bondrucker wird in Windows mit dem Treiber des Herstellers
    eingerichtet; die App druckt den Bon vom Server roh (ESC/POS) auf diesen Windows-Drucker.
+   Für ein signotec-Unterschriftenpad einmal die „signoPAD-API (64 Bit)“ von signotec installieren
+   (Treiber und `STPadLib.dll`); die App findet die Bibliothek im Programmordner von signotec.
 5. **Starten**. Ab jetzt startet die App mit Windows und öffnet die Oberfläche von selbst.
 
 Die App ist pro Benutzer installiert: Updates laufen ohne Administratorrechte, nachts zwischen
