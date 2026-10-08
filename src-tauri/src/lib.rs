@@ -132,6 +132,7 @@ pub fn run() {
             wartung::koppeln,
             wartung::starten,
             wartung::geraete_einrichten,
+            wartung::seite_oeffnen,
             wartung::wartung_pin,
             wartung::wartung_info,
             wartung::edge_aendern,

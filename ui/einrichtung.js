@@ -47,7 +47,7 @@ function fertigZeigen(s) {
   zeigen('fertig', true);
   $('gekoppelt').textContent = `Gekoppelt als Kassenplatz ${s.platz_nr} · ${s.platz_name} (${ARTEN[s.art] || s.art}) mit ${s.edge_name || s.edge}.`;
   geraeteListe($('usb'), s.usb);
-  zeigen('treiber', s.usb.some((g) => g.typ === 'finger'));
+  zeigen('treiber', s.usb.some((g) => g.typ === 'finger' || (g.typ === 'unterschrift' && g.status === 'treiber_fehlt')));
 }
 
 async function koppeln() {

@@ -79,7 +79,7 @@ fn auspacken(typ: &str, zip: &[u8]) -> Result<(PathBuf, Pruefsummen)> {
 }
 
 #[cfg(windows)]
-fn als_admin(programm: &str, argumente: &str, ordner: &Path) -> Result<u32> {
+pub(crate) fn als_admin(programm: &str, argumente: &str, ordner: &Path) -> Result<u32> {
     use std::os::windows::ffi::OsStrExt;
     use windows_sys::Win32::Foundation::CloseHandle;
     use windows_sys::Win32::System::Threading::{GetExitCodeProcess, WaitForSingleObject, INFINITE};
@@ -114,7 +114,7 @@ fn als_admin(programm: &str, argumente: &str, ordner: &Path) -> Result<u32> {
 }
 
 #[cfg(not(windows))]
-fn als_admin(_programm: &str, _argumente: &str, _ordner: &Path) -> Result<u32> {
+pub(crate) fn als_admin(_programm: &str, _argumente: &str, _ordner: &Path) -> Result<u32> {
     bail!("Treiber werden nur unter Windows installiert")
 }
 

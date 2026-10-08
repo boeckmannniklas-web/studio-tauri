@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1 – 2026-10-08
+
+- „Geräte einrichten“ installiert die signoPAD-API für das Unterschriftenpad selbst: Die App lädt das
+  offizielle Setup von signotec (9.0.1, 64 Bit), prüft Größe und SHA-256 und installiert still Treiber und
+  Bibliothek (eine Rückfrage der Benutzerkontensteuerung). Für andere Dateien gibt es keinen Download.
+- Geräteliste in Einrichtung und Wartung: Fehlt etwas, steht darunter, was zu tun ist – mit „Download-Seite
+  öffnen“ als Rückfall (nur freigegebene Seiten der Hersteller).
+
 ## 0.4.0 – 2026-10-08
 
 - signotec-Unterschriftenpad per USB am Platz (Sigma, Zeta, Omega, Gamma, Delta, Alpha): Die App lädt die

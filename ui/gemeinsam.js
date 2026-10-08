@@ -22,5 +22,20 @@ function geraeteListe(el, usb) {
     d.querySelector('.leise').textContent = TYPEN[g.typ] || '';
     d.querySelector('.marke').textContent = STATUS[g.status] || g.status;
     el.appendChild(d);
+    // Fehlt etwas: was zu tun ist – und die Download-Seite des Herstellers als Rückfall
+    if (g.status !== 'bereit' && (g.meldung || g.link)) {
+      const hilfe = document.createElement('div');
+      hilfe.className = 'leise';
+      hilfe.style.margin = '-4px 0 8px';
+      hilfe.textContent = g.meldung || '';
+      if (g.link) {
+        const a = document.createElement('a');
+        a.href = '#';
+        a.textContent = ' Download-Seite öffnen';
+        a.onclick = (e) => { e.preventDefault(); befehl('seite_oeffnen', { url: g.link }).catch((x) => alert(String(x))); };
+        hilfe.appendChild(a);
+      }
+      el.appendChild(hilfe);
+    }
   }
 }

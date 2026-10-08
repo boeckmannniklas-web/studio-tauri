@@ -10,6 +10,7 @@
     "allow-koppeln",
     "allow-starten",
     "allow-geraete-einrichten",
+    "allow-seite-oeffnen",
     "allow-wartung-pin",
     "allow-wartung-info",
     "allow-edge-aendern",

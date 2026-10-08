@@ -9,6 +9,7 @@ fn main() {
             "koppeln",
             "starten",
             "geraete_einrichten",
+            "seite_oeffnen",
             "wartung_pin",
             "wartung_info",
             "edge_aendern",

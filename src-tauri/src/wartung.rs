@@ -12,7 +12,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::edge::{self, EdgeFehler};
-use crate::geraete::{self, pakete, UsbGeraet};
+use crate::geraete::{self, hersteller, pakete, UsbGeraet};
 use crate::{agent, fenster, konfig, suche, update, Zustand};
 
 const WARTUNG_OFFEN: Duration = Duration::from_secs(600);
@@ -175,22 +175,76 @@ pub async fn geraete_einrichten(app: AppHandle) -> Result<String, String> {
     freigegeben(&app)?;
     let edge = app.state::<Zustand>().edge().ok_or("Erst koppeln")?;
     let usb = tauri::async_runtime::spawn_blocking(geraete::suchen).await.map_err(|e| e.to_string())?;
-    if !usb.iter().any(|g| g.typ == "finger") {
-        return Err("Kein unterstütztes USB-Gerät eingesteckt (Fingerabdruckscanner von SecuGen).".into());
+    let finger = usb.iter().any(|g| g.typ == "finger");
+    let pad = usb.iter().any(|g| g.typ == "unterschrift" && g.status == "treiber_fehlt");
+    if !finger && !pad {
+        return Err("Kein USB-Gerät, das etwas braucht (Fingerabdruckscanner von SecuGen, Unterschriftenpad von signotec).".into());
     }
-    let zip = edge.geraetepaket("secugen").await.map_err(|e| e.to_string())?;
-    // Die Benutzerkontensteuerung fragt gleich nach – das Fenster macht dafür Platz
-    fenster::zuruecktreten(&app);
-    let erg = tauri::async_runtime::spawn_blocking(move || pakete::einrichten("secugen", &zip))
+    // Erst alles laden – dann erst die Rückfragen der Benutzerkontensteuerung
+    let mut meldungen = Vec::new();
+    let paket = if finger {
+        match edge.geraetepaket("secugen").await {
+            Ok(zip) => Some(zip),
+            Err(e) => {
+                meldungen.push(format!("Fingerabdruckscanner: {e}"));
+                None
+            }
+        }
+    } else {
+        None
+    };
+    let setup = if pad {
+        match hersteller::laden(&hersteller::SIGNOTEC).await {
+            Ok(datei) => Some(datei),
+            Err(e) => {
+                meldungen.push(format!("Unterschriftenpad: {e:#}"));
+                None
+            }
+        }
+    } else {
+        None
+    };
+    let mut gelungen = false;
+    if paket.is_some() || setup.is_some() {
+        // Die Benutzerkontensteuerung fragt gleich nach – das Fenster macht dafür Platz
+        fenster::zuruecktreten(&app);
+        let erg = tauri::async_runtime::spawn_blocking(move || {
+            let mut out = Vec::new();
+            if let Some(zip) = paket {
+                out.push(pakete::einrichten("secugen", &zip).map_err(|e| format!("Fingerabdruckscanner: {e:#}")));
+            }
+            if let Some(datei) = setup {
+                out.push(hersteller::installieren(&hersteller::SIGNOTEC, &datei).map_err(|e| format!("Unterschriftenpad: {e:#}")));
+            }
+            out
+        })
         .await
         .map_err(|e| e.to_string())?;
-    let art = app.state::<Zustand>().konfig.lock().unwrap().as_ref().map(|k| k.art.clone()).unwrap_or_default();
-    fenster::modus(&app, &art);
-    if let Some(f) = fenster::fenster(&app) {
-        let _ = f.unminimize();
-        let _ = f.set_focus();
+        let art = app.state::<Zustand>().konfig.lock().unwrap().as_ref().map(|k| k.art.clone()).unwrap_or_default();
+        fenster::modus(&app, &art);
+        if let Some(f) = fenster::fenster(&app) {
+            let _ = f.unminimize();
+            let _ = f.set_focus();
+        }
+        for e in erg {
+            match e {
+                Ok(m) => {
+                    gelungen = true;
+                    meldungen.push(m);
+                }
+                Err(m) => meldungen.push(m),
+            }
+        }
     }
-    erg.map_err(|e| format!("{e:#}"))
+    if gelungen { Ok(meldungen.join(" · ")) } else { Err(meldungen.join(" · ")) }
+}
+
+/// Download-Seite eines Herstellers im Browser (Link in der Geräteliste) – nur freigegebene Seiten.
+#[tauri::command]
+pub async fn seite_oeffnen(app: AppHandle, url: String) -> Result<(), String> {
+    freigegeben(&app)?;
+    fenster::zuruecktreten(&app);
+    hersteller::seite_oeffnen(&url).map_err(|e| format!("{e:#}"))
 }
 
 #[tauri::command]

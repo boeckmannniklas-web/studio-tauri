@@ -6,6 +6,7 @@
 //! Oberfläche, die erkennt den Scan selbst.
 
 pub mod drucker;
+pub mod hersteller;
 pub mod magnetkarte;
 pub mod pakete;
 pub mod secugen;
@@ -32,6 +33,9 @@ pub struct UsbGeraet {
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meldung: Option<String>,
+    /// Bei „treiber_fehlt“: die Download-Seite des Herstellers
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link: Option<String>,
 }
 
 const SECUGEN: u16 = 0x1162;
@@ -65,22 +69,23 @@ pub fn suchen() -> Vec<UsbGeraet> {
         if vid == SECUGEN {
             let (klasse, modell) = secugen_modell(pid);
             let (status, meldung) = secugen::zustand();
-            out.push(UsbGeraet { typ: "finger", usb_id, anschluss: None, seriennummer, modell: Some(modell.into()), klasse, status, meldung });
+            out.push(UsbGeraet { typ: "finger", usb_id, anschluss: None, seriennummer, modell: Some(modell.into()), klasse, status, meldung, link: None });
         } else if let Some(chip) = magnetkarte::wandler(vid, pid) {
             let (status, meldung) = magnetkarte::zustand();
             let modell = Some(format!("Magnetkartenleser ({})", produkt.unwrap_or_else(|| chip.into())));
             out.push(UsbGeraet { typ: "magnetkarte", usb_id, anschluss: magnetkarte::stand().anschluss, seriennummer, modell,
-                                 klasse: None, status, meldung });
+                                 klasse: None, status, meldung, link: None });
         } else if vid == SIGNOTEC {
             let (status, meldung) = unterschrift::zustand();
+            let link = (status == "treiber_fehlt").then(|| hersteller::SIGNOTEC.seite.to_string());
             out.push(UsbGeraet { typ: "unterschrift", usb_id, anschluss: None, seriennummer,
-                                 modell: produkt.or_else(|| Some("signotec-Pad".into())), klasse: None, status, meldung });
+                                 modell: produkt.or_else(|| Some("signotec-Pad".into())), klasse: None, status, meldung, link });
         } else if QR.contains(&vid) {
             out.push(UsbGeraet { typ: "qr", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status: "bereit".into(),
-                                 meldung: Some("Tastaturmodus – scannt direkt in die Oberfläche".into()) });
+                                 meldung: Some("Tastaturmodus – scannt direkt in die Oberfläche".into()), link: None });
         } else if DRUCKER.contains(&vid) {
             let (status, meldung) = drucker::zustand();
-            out.push(UsbGeraet { typ: "drucker", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status, meldung });
+            out.push(UsbGeraet { typ: "drucker", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status, meldung, link: None });
         }
     }
     out

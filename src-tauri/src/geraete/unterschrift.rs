@@ -71,7 +71,9 @@ pub fn zustand() -> (String, Option<String>) {
     if dll_pfad().is_some() {
         ("bereit".into(), None)
     } else {
-        ("treiber_fehlt".into(), Some("signoPAD-API (64 Bit) von signotec auf diesem PC installieren".into()))
+        ("treiber_fehlt".into(), Some(
+            "signoPAD-API von signotec fehlt – am Platz Wartung (Strg+Alt+S) → „Geräte einrichten“ lädt und installiert sie".into(),
+        ))
     }
 }
 
