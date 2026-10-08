@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.3 – 2026-10-08
+
+- QR-/Barcode-Scanner von SUNMI (Blink Scanning Box, USB-ID 324F) werden erkannt und stehen in der
+  Geräteliste auf „bereit“. Scanner anderer Hersteller erkennt die App zusätzlich am Produktnamen
+  („Scanner“, „Barcode“ …). Wie bisher im Tastaturmodus: Der Scanner tippt in die Oberfläche, Kasse und
+  Kiosk erkennen den Scan selbst.
+
 ## 0.4.2 – 2026-10-08
 
 - Fingerabdruckscanner mit einem Klick: „Geräte einrichten“ installiert alle SecuGen-Treiber des

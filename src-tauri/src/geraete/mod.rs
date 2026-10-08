@@ -40,8 +40,10 @@ pub struct UsbGeraet {
 
 const SECUGEN: u16 = 0x1162;
 const SIGNOTEC: u16 = 0x2133;
-/// Hersteller von QR-/Barcode-Scannern und Bondruckern, die wir erkennen (noch ohne Unterstützung)
-const QR: [u16; 5] = [0x0c2e /* Honeywell */, 0x05e0 /* Zebra */, 0x05f9 /* Datalogic */, 0x1eab /* Newland */, 0x26f1 /* RTscan */];
+/// Hersteller von QR-/Barcode-Scannern, die wir erkennen
+const QR: [u16; 6] = [0x0c2e /* Honeywell */, 0x05e0 /* Zebra */, 0x05f9 /* Datalogic */, 0x1eab /* Newland */, 0x26f1 /* RTscan */,
+                      0x324f /* SUNMI (Blink Scanning Box) */];
+/// Bondrucker, die wir erkennen
 const DRUCKER: [u16; 3] = [0x04b8 /* Epson */, 0x0519 /* Star */, 0x0dd4 /* Custom */];
 
 /// Produkt-ID → SDK-Klasse und Modell, wie am Studio-Server (secugen/erkennung.py)
@@ -56,6 +58,12 @@ pub fn secugen_modell(pid: u16) -> (Option<&'static str>, &'static str) {
         0x2201 => (Some("fdu06"), "SecuGen Hamster Pro"),
         _ => (None, "SecuGen-Scanner"),
     }
+}
+
+/// Scanner anderer Hersteller am Produktnamen erkennen (Windows nennt nur den, nicht den Hersteller)
+fn scanner_name(produkt: &str) -> bool {
+    let p = produkt.to_lowercase();
+    ["scanner", "barcode", "scanning box", "sunmi"].iter().any(|w| p.contains(w))
 }
 
 pub fn suchen() -> Vec<UsbGeraet> {
@@ -80,8 +88,9 @@ pub fn suchen() -> Vec<UsbGeraet> {
             let link = (status == "treiber_fehlt").then(|| hersteller::SIGNOTEC.seite.to_string());
             out.push(UsbGeraet { typ: "unterschrift", usb_id, anschluss: None, seriennummer,
                                  modell: produkt.or_else(|| Some("signotec-Pad".into())), klasse: None, status, meldung, link });
-        } else if QR.contains(&vid) {
-            out.push(UsbGeraet { typ: "qr", usb_id, anschluss: None, seriennummer, modell: produkt, klasse: None, status: "bereit".into(),
+        } else if QR.contains(&vid) || produkt.as_deref().is_some_and(scanner_name) {
+            let modell = produkt.or_else(|| (vid == 0x324f).then(|| "SUNMI Scanning Box".into()));
+            out.push(UsbGeraet { typ: "qr", usb_id, anschluss: None, seriennummer, modell, klasse: None, status: "bereit".into(),
                                  meldung: Some("Tastaturmodus – scannt direkt in die Oberfläche".into()), link: None });
         } else if DRUCKER.contains(&vid) {
             let (status, meldung) = drucker::zustand();
@@ -107,5 +116,19 @@ pub fn rechner() -> (Option<String>, Option<String>) {
     #[cfg(not(windows))]
     {
         (None, None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scanner_am_namen() {
+        assert!(scanner_name("SUNMI Scanning Box"));
+        assert!(scanner_name("2D Barcode Reader"));
+        assert!(scanner_name("USB Scanner"));
+        assert!(!scanner_name("USB-Eingabegerät"));
+        assert!(!scanner_name("HID Keyboard Device"));
     }
 }

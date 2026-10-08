@@ -64,3 +64,8 @@ Geräteliste.
 
 Magnetkartenleser (USB-Seriell), QR-/Barcode-Scanner im Tastaturmodus und Bondrucker (über den
 Windows-Drucker) brauchen keine Treiber aus der App.
+
+QR-/Barcode-Scanner erkennt die App an der USB-ID (Honeywell, Zebra, Datalogic, Newland, RTscan,
+SUNMI 324F) oder am Produktnamen. Sie müssen im **Tastaturmodus** (USB-HID) laufen – Windows zeigt sie
+dann als „HID-Tastatur“. Test: Editor öffnen, Code scannen, der Text erscheint. Am Kiosk unter
+„Erkennen mit“ den USB-Scanner wählen; an der Theke braucht die Kasse die App „QR-/NFC-Leser“.
