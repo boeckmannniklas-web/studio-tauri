@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0 – 2026-10-10
+
+- **Mit Windows starten – ja oder nein:** Der Installer fragt bei der ersten Installation, ob der Platz
+  mit Windows startet (empfohlen für Kiosk und Anzeige). Updates fragen nie – ohne frühere Antwort bleibt
+  es beim Start mit Windows. Die Antwort steht unter `HKCU\Software\Studio Kassenplatz` (`Autostart`).
+- Die Kassenverwaltung kann es je Platz vorgeben (Ja / Nein / wie bei der Installation, auch beim
+  Anlegen des Platzes); die App übernimmt die Vorgabe beim nächsten Abgleich. Braucht einen Studio-Server
+  mit der Gestaltung der Kassenplätze – ältere Server schicken nichts, dann gilt die Wahl im Installer.
+- Die App meldet Auflösung und Windows-Skalierung ihres Bildschirms; die Kassenverwaltung übernimmt sie für
+  die Vorschau („Vom Platz übernehmen“).
+
 ## 0.4.3 – 2026-10-08
 
 - QR-/Barcode-Scanner von SUNMI (Blink Scanning Box, USB-ID 324F) werden erkannt und stehen in der

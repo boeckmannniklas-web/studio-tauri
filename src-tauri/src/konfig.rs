@@ -35,6 +35,9 @@ pub struct Konfig {
     /// Größe der Oberfläche in Prozent – gemerkt, damit sie schon vor dem ersten Herzschlag stimmt
     #[serde(default = "hundert")]
     pub zoom: u32,
+    /// Vorgabe der Kassenverwaltung: mit Windows starten ja/nein; None = wie bei der Installation
+    #[serde(default)]
+    pub autostart: Option<bool>,
 }
 
 fn hundert() -> u32 {

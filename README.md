@@ -24,7 +24,8 @@ Eingestellt wird jeder Platz am Studio-Server unter **Kassenverwaltung → Kasse
    eingerichtet; die App druckt den Bon vom Server roh (ESC/POS) auf diesen Windows-Drucker.
    Für ein signotec-Unterschriftenpad einmal die „signoPAD-API (64 Bit)“ von signotec installieren
    (Treiber und `STPadLib.dll`); die App findet die Bibliothek im Programmordner von signotec.
-5. **Starten**. Ab jetzt startet die App mit Windows und öffnet die Oberfläche von selbst.
+5. **Starten**. Ab jetzt startet die App mit Windows (wenn bei der Installation gewählt oder in der
+   Kassenverwaltung beim Platz vorgegeben) und öffnet die Oberfläche von selbst.
 
 Die App ist pro Benutzer installiert: Updates laufen ohne Administratorrechte, nachts zwischen
 3 und 4 Uhr oder sofort über das Wartungsmenü.

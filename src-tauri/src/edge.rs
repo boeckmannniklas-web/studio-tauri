@@ -50,6 +50,9 @@ pub struct Agentinfo {
     /// Drucker in Windows – am Server wählbar für den Bondrucker am Platz
     #[serde(skip_serializing_if = "Option::is_none")]
     pub windows_drucker: Option<Vec<String>>,
+    /// Auflösung und Windows-Skalierung des Bildschirms, z. B. „1920x1080@1.25“ – für die Vorschau am Server
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bildschirm: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -64,6 +67,9 @@ pub struct PlatzInfo {
     /// Größe der Oberfläche in Prozent (Edge ab Kassenplätze Stufe 2; ältere schicken nichts)
     #[serde(default = "hundert")]
     pub zoom: u32,
+    /// Mit Windows starten (Edge ab Kiosk-Gestaltung; None = wie bei der Installation, ältere schicken nichts)
+    #[serde(default)]
+    pub autostart: Option<bool>,
     #[serde(default)]
     pub wartungs_pin: bool,
     #[serde(default)]

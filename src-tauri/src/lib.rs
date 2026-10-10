@@ -6,6 +6,7 @@
 //! Alles Native läuft zwischen Agent und Server (docs/KASSENPLAETZE.md im Studio-Repo).
 
 mod agent;
+mod autostart;
 mod edge;
 mod fenster;
 mod geraete;
@@ -109,6 +110,7 @@ pub fn run() {
                 hinweis: Mutex::new(None),
             });
             fenster::erstellen(app.handle())?;
+            autostart::anwenden(app.handle());
             if let Err(e) = app.global_shortcut().register(wartung_taste) {
                 log::warn!("Strg+Alt+S nicht belegbar: {e}");
             }

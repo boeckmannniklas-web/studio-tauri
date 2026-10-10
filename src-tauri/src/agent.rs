@@ -35,7 +35,17 @@ pub fn agentinfo() -> Agentinfo {
         modell,
         seriennummer: machine_uid::get().ok(),
         windows_drucker: Some(drucker::liste()).filter(|l| !l.is_empty()),
+        bildschirm: None,
     }
+}
+
+/// Bildschirm, auf dem das Fenster steht (sonst der Hauptbildschirm): „1920x1080@1.25“.
+pub fn bildschirm(app: &AppHandle) -> Option<String> {
+    let m = fenster::fenster(app)
+        .and_then(|f| f.current_monitor().ok().flatten())
+        .or_else(|| app.primary_monitor().ok().flatten())?;
+    let g = m.size();
+    Some(format!("{}x{}@{}", g.width, g.height, (m.scale_factor() * 100.0).round() / 100.0))
 }
 
 fn system() -> String {
@@ -95,7 +105,7 @@ async fn herzschlag(app: AppHandle) {
     loop {
         let z = app.state::<Zustand>();
         let Some(edge) = z.edge() else { return };
-        let info = agentinfo();
+        let info = Agentinfo { bildschirm: bildschirm(&app), ..agentinfo() };
         let usb = tauri::async_runtime::spawn_blocking(geraete::suchen).await.unwrap_or_default();
         match edge.herzschlag(&info, &usb).await {
             Ok(platz) => {
@@ -128,6 +138,20 @@ async fn herzschlag(app: AppHandle) {
                 };
                 if zoom_neu {
                     fenster::zoom_anwenden(&app);
+                }
+                let autostart_neu = {
+                    let mut k = z.konfig.lock().unwrap();
+                    match k.as_mut() {
+                        Some(k) if k.autostart != platz.autostart => {
+                            k.autostart = platz.autostart;
+                            let _ = k.speichern(&z.ordner);
+                            true
+                        }
+                        _ => false,
+                    }
+                };
+                if autostart_neu {
+                    crate::autostart::anwenden(&app);
                 }
                 *z.zuletzt.lock().unwrap() = Some(platz.clone());
                 let offline = z.offline.swap(false, Ordering::Relaxed);

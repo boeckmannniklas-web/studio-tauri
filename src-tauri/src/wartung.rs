@@ -9,9 +9,8 @@ use std::time::{Duration, Instant};
 
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
-use tauri_plugin_autostart::ManagerExt;
 
-use crate::edge::{self, EdgeFehler};
+use crate::edge::{self, Agentinfo, EdgeFehler};
 use crate::geraete::{self, hersteller, pakete, UsbGeraet};
 use crate::{agent, fenster, konfig, suche, update, Zustand};
 
@@ -111,7 +110,7 @@ pub async fn koppeln(app: AppHandle, edge: String, code: String) -> Result<Stand
     let (edge, code) = zerlegen(&edge, &code);
     let basis = konfig::edge_normal(&edge).map_err(|e| format!("{e:#}"))?;
     let hardware = machine_uid::get().unwrap_or_else(|_| "unbekannt".into());
-    let info = agent::agentinfo();
+    let info = Agentinfo { bildschirm: agent::bildschirm(&app), ..agent::agentinfo() };
     let a = edge::koppeln(&basis, &code, &hardware, &info).await.map_err(|e| match e {
         EdgeFehler::Server(403, _) => "Der Code ist falsch oder abgelaufen – in der Kassenverwaltung einen neuen erzeugen.".to_string(),
         EdgeFehler::Server(404, _) => "Unter dieser Adresse läuft kein Studio-Server mit der App „Kassenplätze“.".to_string(),
@@ -124,7 +123,7 @@ pub async fn koppeln(app: AppHandle, edge: String, code: String) -> Result<Stand
     let k = konfig::Konfig {
         edge: basis, platz_id: a.platz.id.clone(), tenant_id: a.edge.tenant_id.clone(), edge_name: a.edge.name.clone(),
         platz_name: a.platz.name.clone(), platz_nr: a.platz.nr.clone(), art: a.platz.art.clone(),
-        ausrichtung: a.platz.ausrichtung.clone(), zoom: a.platz.zoom,
+        ausrichtung: a.platz.ausrichtung.clone(), zoom: a.platz.zoom, autostart: a.platz.autostart,
     };
     let z = app.state::<Zustand>();
     k.speichern(&z.ordner).map_err(|e| format!("{e:#}"))?;
@@ -133,9 +132,7 @@ pub async fn koppeln(app: AppHandle, edge: String, code: String) -> Result<Stand
     *z.hinweis.lock().unwrap() = None;
     // Nach dem Koppeln darf der Techniker noch Treiber einrichten, ohne PIN
     *z.wartung_bis.lock().unwrap() = Some(Instant::now() + WARTUNG_OFFEN);
-    if let Err(e) = app.autolaunch().enable() {
-        log::warn!("Autostart: {e}");
-    }
+    crate::autostart::anwenden(&app);
     agent::starten(&app);
     einrichtung_stand(app).await
 }
